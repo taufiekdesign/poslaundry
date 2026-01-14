@@ -1,6 +1,6 @@
 <script>
         // --- 1. CONFIGURATION ---
-        const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwmcwmimlusSPzkKJrzKjEY1QFC-jExoqhHfbVvpWmXuuG1vto2TSQqzYpZNt1HBF6dnw/exec"; 
+        const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjq2xgX8r2QLxuo8acOS1b6uaKhcmRkOoW-VKzSY_wX-V89nRK9bG8-cuaGiF5zdyOaA/exec"; 
 
         // --- 2. GLOBAL STATE ---
         let products = []; 
