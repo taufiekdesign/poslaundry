@@ -21,6 +21,8 @@
         .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Active Filter Button Style */
+        .filter-btn-active { background-color: #ffffff !important; color: #2563eb !important; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8">
@@ -35,10 +37,9 @@
             </div>
             
             <div class="mt-4 md:mt-0 flex items-center gap-4">
-                <!-- Dropdown Periode (Visual Only) -->
+                <!-- Dropdown Periode (Visual Only - Grafik Global) -->
                 <select class="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg px-4 py-2.5 focus:ring-blue-500 focus:border-blue-500 block outline-none">
-                    <option>Bulan Ini</option>
-                    <option>Semua Waktu</option>
+                    <option>Ringkasan Global</option>
                 </select>
 
                 <!-- Tombol Refresh -->
@@ -166,6 +167,58 @@
                 </div>
             </div>
         </div>
+
+        <!-- 4. TABEL DAFTAR TRANSAKSI (FILTERABLE) -->
+        <div class="card bg-white border border-slate-200">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div>
+                    <h3 class="font-bold text-slate-700 text-lg flex items-center gap-2">
+                        📝 Daftar Transaksi
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-1">Lihat detail order berdasarkan tanggal</p>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row flex-wrap items-center gap-3">
+                    <!-- Preset Filter Buttons -->
+                    <div class="flex bg-slate-100 rounded-lg p-1">
+                        <button onclick="setFilter('today')" class="filter-btn px-3 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-700 transition filter-btn-active" id="btnFilterToday">Hari Ini</button>
+                        <button onclick="setFilter('yesterday')" class="filter-btn px-3 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-700 transition" id="btnFilterYesterday">Kemarin</button>
+                        <button onclick="setFilter('month')" class="filter-btn px-3 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-700 transition" id="btnFilterMonth">Bulan Ini</button>
+                        <button onclick="setFilter('all')" class="filter-btn px-3 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-700 transition" id="btnFilterAll">Semua</button>
+                    </div>
+
+                    <!-- Custom Date Range -->
+                    <div class="flex items-center gap-2 border-l border-slate-200 pl-2 sm:pl-3">
+                        <input type="date" id="filterStartDate" class="border border-slate-300 rounded px-2 py-1.5 text-xs text-slate-600 focus:outline-blue-500">
+                        <span class="text-slate-400 text-xs">-</span>
+                        <input type="date" id="filterEndDate" class="border border-slate-300 rounded px-2 py-1.5 text-xs text-slate-600 focus:outline-blue-500">
+                        <button onclick="setFilter('custom')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-xs rounded font-bold transition shadow-sm">Cari</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-lg border border-slate-100">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+                        <tr>
+                            <th class="px-4 py-3 border-b">Waktu</th>
+                            <th class="px-4 py-3 border-b">Pelanggan</th>
+                            <th class="px-4 py-3 border-b text-center">Status</th>
+                            <th class="px-4 py-3 border-b text-center">Pembayaran</th>
+                            <th class="px-4 py-3 border-b text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionTableBody" class="divide-y divide-slate-100">
+                        <tr><td colspan="5" class="text-center py-8 text-slate-400">Silakan pilih filter tanggal...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-4 flex justify-between items-center text-xs text-slate-400">
+                <span id="transactionCount">Menampilkan 0 data</span>
+                <span class="italic text-[10px]">Data terurut dari yang terbaru</span>
+            </div>
+        </div>
         
     </div>
 
@@ -178,8 +231,14 @@
         // --- INISIALISASI ---
         let revenueChartInstance = null;
         let paymentChartInstance = null;
+        let globalData = []; // Menyimpan semua data mentah dari sheet
 
         window.onload = () => {
+            // Set default date input ke hari ini
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('filterStartDate').value = today;
+            document.getElementById('filterEndDate').value = today;
+
             if (!APP_SCRIPT_URL) {
                 alert("URL Belum Diset! Silakan edit file dashboard.html dan isi APP_SCRIPT_URL di bagian bawah.");
             } else {
@@ -197,7 +256,15 @@
             try {
                 const res = await fetch(APP_SCRIPT_URL);
                 const data = await res.json();
+                
+                // Simpan ke variabel global untuk filtering lokal
+                globalData = data;
+
                 processDashboardData(data);
+                
+                // Default tampilkan transaksi hari ini
+                setFilter('today');
+
             } catch(e) {
                 console.error(e);
                 alert("Gagal mengambil data. Pastikan URL benar & internet lancar.");
@@ -207,7 +274,149 @@
             }
         }
 
-        // --- LOGIKA PENGOLAHAN DATA ---
+        // --- LOGIKA FILTER TRANSAKSI ---
+        function setFilter(type) {
+            // Reset button styles
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('filter-btn-active');
+                btn.classList.add('text-slate-500', 'bg-transparent'); 
+            });
+
+            let startDate = new Date();
+            let endDate = new Date();
+            let filteredData = [];
+
+            // Helper: Reset jam ke 00:00:00
+            const resetTime = (d) => { d.setHours(0,0,0,0); return d; };
+
+            if (type === 'today') {
+                document.getElementById('btnFilterToday').classList.add('filter-btn-active');
+                document.getElementById('btnFilterToday').classList.remove('text-slate-500', 'bg-transparent');
+                
+                resetTime(startDate);
+                resetTime(endDate); // End date juga hari ini (tapi sampai malam nanti diceknya)
+                
+                // Filter Logic
+                filteredData = globalData.filter(row => {
+                    const rowDate = new Date(row.tanggal);
+                    return rowDate.toDateString() === startDate.toDateString();
+                });
+
+            } else if (type === 'yesterday') {
+                document.getElementById('btnFilterYesterday').classList.add('filter-btn-active');
+                document.getElementById('btnFilterYesterday').classList.remove('text-slate-500', 'bg-transparent');
+
+                startDate.setDate(startDate.getDate() - 1);
+                resetTime(startDate);
+                
+                filteredData = globalData.filter(row => {
+                    const rowDate = new Date(row.tanggal);
+                    return rowDate.toDateString() === startDate.toDateString();
+                });
+
+            } else if (type === 'month') {
+                document.getElementById('btnFilterMonth').classList.add('filter-btn-active');
+                document.getElementById('btnFilterMonth').classList.remove('text-slate-500', 'bg-transparent');
+
+                const currentMonth = startDate.getMonth();
+                const currentYear = startDate.getFullYear();
+
+                filteredData = globalData.filter(row => {
+                    const rowDate = new Date(row.tanggal);
+                    return rowDate.getMonth() === currentMonth && rowDate.getFullYear() === currentYear;
+                });
+
+            } else if (type === 'all') {
+                document.getElementById('btnFilterAll').classList.add('filter-btn-active');
+                document.getElementById('btnFilterAll').classList.remove('text-slate-500', 'bg-transparent');
+                filteredData = [...globalData];
+
+            } else if (type === 'custom') {
+                // Ambil dari input date
+                const startVal = document.getElementById('filterStartDate').value;
+                const endVal = document.getElementById('filterEndDate').value;
+
+                if (!startVal || !endVal) return alert("Pilih tanggal mulai dan selesai!");
+
+                const sDate = new Date(startVal);
+                sDate.setHours(0,0,0,0);
+                
+                const eDate = new Date(endVal);
+                eDate.setHours(23,59,59,999); // Sampai akhir hari
+
+                filteredData = globalData.filter(row => {
+                    const rowDate = new Date(row.tanggal);
+                    return rowDate >= sDate && rowDate <= eDate;
+                });
+            }
+
+            renderTransactionTable(filteredData);
+        }
+
+        function renderTransactionTable(data) {
+            const tbody = document.getElementById('transactionTableBody');
+            tbody.innerHTML = "";
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400 text-sm">Tidak ada data pada periode ini.</td></tr>`;
+                document.getElementById('transactionCount').innerText = "Menampilkan 0 data";
+                return;
+            }
+
+            // Urutkan dari terbaru
+            data.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+
+            document.getElementById('transactionCount').innerText = `Menampilkan ${data.length} data`;
+
+            data.forEach(row => {
+                let dateDisplay = "";
+                let timeDisplay = "";
+                try {
+                    const d = new Date(row.tanggal);
+                    dateDisplay = d.toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: '2-digit'});
+                    timeDisplay = d.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'});
+                } catch(e) {}
+
+                const status = (row.status || "Dikerjakan");
+                let statusBadge = "bg-yellow-100 text-yellow-700";
+                if(status.toLowerCase().includes("selesai")) statusBadge = "bg-green-100 text-green-700";
+                if(status.toLowerCase().includes("diambil")) statusBadge = "bg-slate-100 text-slate-600";
+
+                const bayar = (row.status_bayar || "Belum Lunas");
+                let bayarColor = "text-red-500 font-bold";
+                let metode = "";
+                if(bayar === "Lunas") {
+                    bayarColor = "text-green-600 font-bold";
+                    metode = `<span class="text-[10px] text-slate-400 font-normal block">${row.metode_bayar || 'Cash'}</span>`;
+                }
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-50 last:border-0">
+                        <td class="px-4 py-3 text-slate-600">
+                            <span class="font-bold block text-slate-700">${dateDisplay}</span>
+                            <span class="text-xs text-slate-400">${timeDisplay}</span>
+                        </td>
+                        <td class="px-4 py-3 font-medium text-slate-800 capitalize">
+                            ${row.nama}
+                            <span class="block text-xs text-slate-400 font-normal">0${row.hp}</span>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="${statusBadge} px-2 py-1 rounded-full text-xs font-bold">${status}</span>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="${bayarColor}">${bayar}</span>
+                            ${metode}
+                        </td>
+                        <td class="px-4 py-3 text-right font-bold text-blue-600">
+                            Rp ${(parseInt(row.harga)||0).toLocaleString('id-ID')}
+                            <span class="block text-xs text-slate-400 font-normal font-mono">${row.berat}kg</span>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- LOGIKA DASHBOARD UTAMA (GLOBAL STATS) ---
         function processDashboardData(data) {
             // Variable Penampung
             let cashTotal = 0;
