@@ -351,7 +351,7 @@
             
             // Format WA (Pakai formatDecimal biar Koma muncul di WA)
             let itemsString = cart.map(item => `• ${item.name} (${formatDecimal(item.weight)}kg): Rp ${item.subtotal.toLocaleString('id-ID')}`).join('\n');
-            const pesanWA = `*NOTA LAUNDRY*\n\nHalo Kak *${nama}*,\nBerikut rincian cucian kakak:\n\n${itemsString}\n\n💰 *Total: Rp ${totalPrice.toLocaleString('id-ID')}*\n⚖️ Total Berat: ${formatDecimal(totalWeight)} kg\n🔄 Status: *Dikerjakan*\n\nTerima kasih!`;
+            const pesanWA = `*NOTA LAUNDRY*\n\nHalo Kak *${nama}*,\nBerikut rincian cucian kakak:\n\n${itemsString}\n\n *Total: Rp ${totalPrice.toLocaleString('id-ID')}*\n Total Berat: ${formatDecimal(totalWeight)} kg\n Status: *Dikerjakan*\n\nTerima kasih!`;
             
             try {
                 await fetch(APP_SCRIPT_URL, { 
@@ -440,8 +440,8 @@
                 await fetch(APP_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update', rowNumber: selectedRowData.rowNumber, status: newStatus }) });
                 
                 const hp = "62" + selectedRowData.hp.toString().replace(/^0/, '').replace(/^62/, '');
-                let pesanWA = `ℹ️ Status Laundry ${selectedRowData.nama}: ${newStatus}`;
-                if(newStatus === "Selesai") pesanWA = `✅ Laundry Selesai!\n\nHalo ${selectedRowData.nama}, laundry sudah beres. Total: Rp ${(parseInt(selectedRowData.harga)||0).toLocaleString('id-ID')}`;
+                let pesanWA = `Status Laundry ${selectedRowData.nama}: ${newStatus}`;
+                if(newStatus === "Selesai") pesanWA = `Laundry Selesai!\n\nHalo ${selectedRowData.nama}, laundry sudah beres. Total: Rp ${(parseInt(selectedRowData.harga)||0).toLocaleString('id-ID')}`;
                 
                 setTimeout(() => { 
                     window.open(`https://wa.me/${hp}?text=${encodeURIComponent(pesanWA)}`, '_blank'); 
