@@ -57,12 +57,10 @@
             <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 space-y-3">
                 <div class="flex justify-between items-center">
                     <h3 class="text-sm font-bold text-blue-800 flex items-center gap-2">🛒 Tambah Item</h3>
-                    <!-- Tombol Refresh Produk -->
                     <button onclick="fetchServices()" title="Refresh Daftar Harga" class="text-xs text-blue-500 underline hover:text-blue-700">🔄 Refresh Harga</button>
                 </div>
                 
                 <div>
-                    <!-- Dropdown Layanan -->
                     <select id="serviceSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-sm bg-white cursor-pointer" onchange="updatePriceDisplay()">
                         <option value="">-- Memuat Produk... --</option>
                     </select>
@@ -98,10 +96,25 @@
                         <span class="font-bold text-blue-600 text-lg" id="grandTotalDisplay">Rp 0</span>
                     </div>
                 </div>
+                
+                <!-- OPSI PEMBAYARAN (BARU) -->
+                <div class="mt-4 bg-green-50 p-3 rounded-lg border border-green-200">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="chkBayarAwal" class="form-checkbox h-5 w-5 text-green-600 rounded transition" onchange="toggleMetodeBayar()">
+                        <span class="text-sm font-bold text-green-800">Bayar Lunas Sekarang?</span>
+                    </label>
+                    
+                    <div id="divMetodeBayar" class="hidden mt-2 animate-fade-in-down">
+                        <select id="selectMetodeBayar" class="w-full px-3 py-2 border border-green-300 rounded-lg text-sm focus:outline-none bg-white">
+                            <option value="Tunai">💵 Tunai (Cash)</option>
+                            <option value="QRIS/Transfer">📱 QRIS / Transfer</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             <!-- Submit Button -->
-            <button onclick="submitOrder()" id="btnSubmit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition duration-200 flex justify-center items-center gap-2 transform active:scale-95">
+            <button onclick="submitOrder()" id="btnSubmit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition duration-200 flex justify-center items-center gap-2 transform active:scale-95">
                 <span>🚀 Proses & Kirim Nota</span>
             </button>
             
@@ -110,27 +123,61 @@
             <button onclick="loadHistory()" class="w-full text-blue-600 text-sm font-semibold hover:text-blue-800 transition mt-2 flex items-center justify-center gap-2 py-2">
                 📂 Riwayat & Update Status
             </button>
+
+            <!-- TOMBOL KE DASHBOARD (NEW) -->
+            <div class="text-center mt-6 pt-4 border-t border-dashed border-gray-200">
+                <a href="dashboard.html" target="_blank" class="inline-flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-gray-600 transition p-2 rounded-lg hover:bg-gray-50">
+                    <span>📊</span> Buka Dashboard Owner
+                </a>
+            </div>
         </div>
     </div>
 
-    <!-- MODAL HISTORY -->
+    <!-- MODAL HISTORY & UPDATE -->
     <div id="historyModal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex items-center justify-center p-4 z-50 transition-opacity duration-300 backdrop-blur-sm">
         <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            
             <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-blue-50">
                 <div class="flex items-center gap-2"><span class="text-2xl">📂</span><h2 class="font-bold text-lg text-blue-800">Database Transaksi</h2></div>
                 <button onclick="closeHistory()" class="text-gray-400 hover:text-red-500 text-2xl font-bold">&times;</button>
             </div>
+
             <div class="overflow-y-auto p-0 flex-1 custom-scroll bg-gray-50 relative">
+                
                 <!-- Overlay Update Status -->
                 <div id="updateOverlay" class="hidden absolute inset-0 bg-white bg-opacity-95 z-20 flex flex-col items-center justify-center p-6 text-center">
-                    <h3 class="text-lg font-bold text-gray-800 mb-2">Update Status</h3>
-                    <p class="text-sm text-gray-500 mb-6">Pelanggan: <span id="updateCustName" class="font-semibold text-blue-600"></span></p>
-                    <div class="space-y-3 w-full max-w-xs">
-                        <button onclick="processUpdate('Dikerjakan')" class="w-full py-3 px-4 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-semibold rounded-lg border border-yellow-300">🟡 Dikerjakan</button>
-                        <button onclick="processUpdate('Selesai')" class="w-full py-3 px-4 bg-green-100 hover:bg-green-200 text-green-800 font-semibold rounded-lg border border-green-300">✅ Selesai</button>
-                        <button onclick="processUpdate('Diambil')" class="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg border border-gray-300">👋 Diambil</button>
+                    
+                    <!-- View 1: Pilih Status -->
+                    <div id="viewSelectStatus" class="w-full max-w-xs">
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">Update Status</h3>
+                        <p class="text-sm text-gray-500 mb-6">Pelanggan: <span id="updateCustName" class="font-semibold text-blue-600"></span></p>
+                        
+                        <div class="space-y-3">
+                            <button onclick="processUpdate('Dikerjakan')" class="w-full py-3 px-4 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-semibold rounded-lg border border-yellow-300">🟡 Dikerjakan</button>
+                            <button onclick="processUpdate('Selesai')" class="w-full py-3 px-4 bg-green-100 hover:bg-green-200 text-green-800 font-semibold rounded-lg border border-green-300">✅ Selesai</button>
+                            <!-- Tombol Diambil akan mengecek pembayaran dulu -->
+                            <button onclick="checkPaymentBeforePickup()" class="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg border border-gray-300">👋 Diambil (Cek Bayar)</button>
+                        </div>
+                        <button onclick="closeUpdateOverlay()" class="mt-8 text-gray-400 text-sm underline">Batalkan</button>
                     </div>
-                    <button onclick="closeUpdateOverlay()" class="mt-8 text-gray-400 text-sm underline">Batalkan</button>
+
+                    <!-- View 2: Form Pelunasan (Muncul jika belum lunas saat diambil) -->
+                    <div id="viewPaymentSettle" class="hidden w-full max-w-xs text-left bg-red-50 p-6 rounded-xl border border-red-100 shadow-lg">
+                        <h3 class="text-lg font-bold text-red-600 mb-1">⚠️ Belum Lunas!</h3>
+                        <p class="text-sm text-gray-600 mb-4">Total Tagihan: <span id="settleAmount" class="font-bold text-gray-900"></span></p>
+                        
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Pilih Metode Pelunasan:</label>
+                        <select id="settleMethod" class="w-full p-3 border border-red-200 rounded-lg mb-4 bg-white focus:outline-none focus:ring-2 focus:ring-red-500">
+                            <option value="Tunai">💵 Tunai (Cash)</option>
+                            <option value="QRIS/Transfer">📱 QRIS / Transfer</option>
+                        </select>
+
+                        <button onclick="processUpdate('Diambil', true)" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow transition">
+                            💰 Bayar & Ambil Barang
+                        </button>
+                        <button onclick="backToStatusSelect()" class="mt-4 w-full text-center text-gray-400 text-sm hover:text-gray-600">Kembali</button>
+                    </div>
+
                 </div>
                 
                 <div id="historyLoading" class="hidden flex flex-col items-center justify-center py-12 text-gray-500"><div class="loader loader-lg mb-3"></div><p>Mengambil Data...</p></div>
@@ -153,87 +200,68 @@
     <script>
         // --- KONFIGURASI PENTING (DIISI SEBELUM DEPLOY) ---
         // Masukkan URL Google Apps Script (/exec) milik klien di sini:
-        const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxeorSmtjsep3vx4rfYO_bYWPMAOp0JxMVeMFR3FnOnSCnBc7zkTp1bxGr2qOqY2mpNlA/exec"; 
+        const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwmcwmimlusSPzkKJrzKjEY1QFC-jExoqhHfbVvpWmXuuG1vto2TSQqzYpZNt1HBF6dnw/exec"; 
 
         // --- VARIABLE GLOBAL ---
-        let products = []; // Produk akan diisi dari Google Sheet
+        let products = [];
         let cart = [];
         let customerDatabase = [];
 
         // --- INIT SAAT WEB DIBUKA ---
         window.onload = () => {
             if (!APP_SCRIPT_URL) {
-                alert("PENTING: Variabel APP_SCRIPT_URL di dalam file index.html belum diisi! Silakan edit file dan masukkan URL Google Apps Script.");
+                alert("PENTING: Variabel APP_SCRIPT_URL belum diisi! Edit file index.html.");
                 return;
             }
-            
-            // Load data parallel biar cepet
             fetchCustomers(); 
             fetchServices(); 
         };
 
-        // --- FETCH PRODUK DARI SHEET (TAB SETTING) ---
+        // --- FUNGSI UI PEMBAYARAN ---
+        function toggleMetodeBayar() {
+            const chk = document.getElementById('chkBayarAwal');
+            const div = document.getElementById('divMetodeBayar');
+            if (chk.checked) {
+                div.classList.remove('hidden');
+            } else {
+                div.classList.add('hidden');
+            }
+        }
+
+        // --- FETCH PRODUK ---
         async function fetchServices() {
             const select = document.getElementById('serviceSelect');
-            
-            if (!APP_SCRIPT_URL) {
-                select.innerHTML = "<option>Error: URL Belum Diset</option>";
-                return;
-            }
-
             select.innerHTML = "<option>Loading Produk...</option>";
-
             try {
-                // Request dengan parameter action=products
                 const response = await fetch(`${APP_SCRIPT_URL}?action=products`);
                 const data = await response.json();
-                
-                products = data; // Simpan ke global variable
-                
-                // Render ke Dropdown
+                products = data;
                 select.innerHTML = "";
-                if(products.length === 0) {
-                     select.innerHTML = "<option value=''>Data Produk Kosong</option>";
-                     return;
-                }
-
+                if(products.length === 0) { select.innerHTML = "<option value=''>Data Produk Kosong</option>"; return; }
                 products.forEach(p => {
                     const opt = document.createElement('option');
                     opt.value = p.id;
                     opt.text = `${p.name}`;
                     select.appendChild(opt);
                 });
-                
-                updatePriceDisplay(); // Update harga item pertama
-                
+                updatePriceDisplay();
             } catch (error) {
-                console.error("Gagal ambil produk:", error);
-                select.innerHTML = "<option>Gagal Load Produk</option>";
-                alert("Gagal mengambil daftar harga. Pastikan Tab 'Setting' sudah dibuat di Google Sheet.");
+                console.error(error);
+                select.innerHTML = "<option>Gagal Load</option>";
             }
         }
-
-        // --- FUNGSI UTILITAS ---
 
         function updatePriceDisplay() {
             const id = document.getElementById('serviceSelect').value;
             const product = products.find(p => p.id == id);
-            
-            if(product) {
-                document.getElementById('displayHarga').value = `Rp ${parseInt(product.price).toLocaleString('id-ID')}`;
-            } else {
-                document.getElementById('displayHarga').value = "-";
-            }
+            if(product) document.getElementById('displayHarga').value = `Rp ${parseInt(product.price).toLocaleString('id-ID')}`;
+            else document.getElementById('displayHarga').value = "-";
         }
 
-        // FUNGSI PINTAR: Parsing angka, terima titik (.) atau koma (,)
         function parseLocalFloat(numStr) { 
             if (!numStr) return 0; 
-            // Ubah koma jadi titik biar JS ngerti, baru diparsing
             return parseFloat(numStr.toString().replace(',', '.')) || 0; 
         }
-
-        // FUNGSI PINTAR: Format tampilan ke Indonesia (Koma untuk desimal)
         function formatDecimal(num) {
             return num.toLocaleString('id-ID', { maximumFractionDigits: 2 });
         }
@@ -241,78 +269,46 @@
         // --- CART LOGIC ---
         function addToCart() {
             const beratInput = document.getElementById('itemBerat');
-            // Parse angka (Titik atau Koma masuk semua)
             const berat = parseLocalFloat(beratInput.value);
-            
             if (berat <= 0) return alert("Jumlah/Berat harus diisi!");
-            
             const serviceId = document.getElementById('serviceSelect').value;
             const product = products.find(p => p.id == serviceId);
-            
             if(!product) return alert("Pilih produk dulu!");
-
             cart.push({ name: product.name, price: product.price, weight: berat, subtotal: berat * product.price });
             beratInput.value = ""; 
             renderCart();
         }
-
-        function deleteItem(index) { 
-            cart.splice(index, 1); 
-            renderCart(); 
-        }
-
+        function deleteItem(index) { cart.splice(index, 1); renderCart(); }
         function renderCart() {
             const tbody = document.getElementById('cartTableBody');
             const cartSection = document.getElementById('cartSection');
             const grandTotalDisplay = document.getElementById('grandTotalDisplay');
-            
             tbody.innerHTML = "";
             if (cart.length === 0) { cartSection.classList.add('hidden'); return; }
             cartSection.classList.remove('hidden');
-            
             let grandTotal = 0;
             cart.forEach((item, index) => {
                 grandTotal += item.subtotal;
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="px-3 py-2">
-                        <div class="font-medium text-gray-800">${item.name}</div>
-                        <div class="text-xs text-gray-400">@ ${item.price/1000}k</div>
-                    </td>
-                    <td class="px-3 py-2 text-right font-medium text-gray-600">
-                        ${formatDecimal(item.weight)} kg
-                    </td>
-                    <td class="px-3 py-2 text-right font-medium">Rp ${item.subtotal.toLocaleString('id-ID')}</td>
-                    <td class="px-3 py-2 text-right">
-                        <button onclick="deleteItem(${index})" class="text-red-400 hover:text-red-600 font-bold">&times;</button>
-                    </td>
-                `;
+                tr.innerHTML = `<td class="px-3 py-2"><div class="font-medium text-gray-800">${item.name}</div><div class="text-xs text-gray-400">@ ${item.price/1000}k</div></td><td class="px-3 py-2 text-right font-medium text-gray-600">${formatDecimal(item.weight)} kg</td><td class="px-3 py-2 text-right font-medium">Rp ${item.subtotal.toLocaleString('id-ID')}</td><td class="px-3 py-2 text-right"><button onclick="deleteItem(${index})" class="text-red-400 hover:text-red-600 font-bold">&times;</button></td>`;
                 tbody.appendChild(tr);
             });
             grandTotalDisplay.innerText = "Rp " + grandTotal.toLocaleString('id-ID');
         }
 
-        // --- DATABASE PELANGGAN ---
         async function fetchCustomers() {
-            if (!APP_SCRIPT_URL) return;
             try {
-                // Default fetch adalah history transaksi, kita bisa ambil data pelanggan dari sana
-                const res = await fetch(APP_SCRIPT_URL); 
-                const data = await res.json();
+                const res = await fetch(APP_SCRIPT_URL); const data = await res.json();
                 const uniqueCust = new Map();
                 data.forEach(row => { if (row.nama && row.hp) uniqueCust.set(row.nama.toLowerCase().trim(), { nama: row.nama, hp: row.hp }); });
                 customerDatabase = Array.from(uniqueCust.values());
             } catch (e) {}
         }
-
-        // --- AUTOCOMPLETE PELANGGAN ---
         const namaInput = document.getElementById("nama");
         const listDiv = document.getElementById("autocomplete-list");
         namaInput.addEventListener("input", function(e) {
-            const val = this.value; 
-            listDiv.innerHTML = ""; listDiv.classList.add("hidden");
+            const val = this.value; listDiv.innerHTML = ""; listDiv.classList.add("hidden");
             if (!val) return;
-            
             listDiv.classList.remove("hidden");
             let count = 0;
             customerDatabase.forEach(cust => {
@@ -320,87 +316,65 @@
                     if (count > 5) return;
                     const item = document.createElement("div");
                     item.innerHTML = "<strong>" + cust.nama.substr(0, val.length) + "</strong>" + cust.nama.substr(val.length) + ` <span class='text-gray-400 text-xs ml-2'>(${cust.hp})</span>`;
-                    item.addEventListener("click", function() { 
-                        namaInput.value = cust.nama; 
-                        document.getElementById("hp").value = cust.hp.toString().replace(/^62/, '').replace(/^0/, ''); 
-                        listDiv.innerHTML = ""; listDiv.classList.add("hidden"); 
-                    });
+                    item.addEventListener("click", function() { namaInput.value = cust.nama; document.getElementById("hp").value = cust.hp.toString().replace(/^62/, '').replace(/^0/, ''); listDiv.innerHTML = ""; listDiv.classList.add("hidden"); });
                     listDiv.appendChild(item); count++;
                 }
             });
         });
         document.addEventListener("click", function (e) { if (e.target !== namaInput) { listDiv.innerHTML = ""; listDiv.classList.add("hidden"); }});
 
-        // --- SUBMIT ORDER ---
+        // --- SUBMIT ORDER BARU ---
         async function submitOrder() {
-            if (!APP_SCRIPT_URL) return alert("URL Database Toko belum diisi di kode!");
             if (cart.length === 0) return alert("Keranjang kosong!");
-            
             const nama = document.getElementById('nama').value; if(!nama) return alert("Nama wajib diisi");
             let hp = document.getElementById('hp').value.replace(/\D/g, '').replace(/^0/, '').replace(/^62/, '');
             const hpFull = "62" + hp;
-            
             const totalWeight = cart.reduce((sum, item) => sum + item.weight, 0);
             const totalPrice = cart.reduce((sum, item) => sum + item.subtotal, 0);
             
+            // Cek Pembayaran Awal
+            const isLunas = document.getElementById('chkBayarAwal').checked;
+            const statusBayar = isLunas ? "Lunas" : "Belum Lunas";
+            const metodeBayar = isLunas ? document.getElementById('selectMetodeBayar').value : "-";
+
             const btn = document.getElementById('btnSubmit'); 
             const statusDiv = document.getElementById('statusMessage');
+            btn.disabled = true; btn.innerHTML = `<div class="loader"></div> Menyimpan...`;
             
-            btn.disabled = true; 
-            btn.innerHTML = `<div class="loader"></div> Menyimpan...`;
-            
-            // Format WA (Pakai formatDecimal biar Koma muncul di WA)
+            // Format Nota WA
             let itemsString = cart.map(item => `• ${item.name} (${formatDecimal(item.weight)}kg): Rp ${item.subtotal.toLocaleString('id-ID')}`).join('\n');
-            const pesanWA = `*NOTA LAUNDRY*\n\nHalo Kak *${nama}*,\nBerikut rincian cucian kakak:\n\n${itemsString}\n\n *Total: Rp ${totalPrice.toLocaleString('id-ID')}*\n Total Berat: ${formatDecimal(totalWeight)} kg\n Status: *Dikerjakan*\n\nTerima kasih!`;
+            const statusBayarText = isLunas ? `✅ LUNAS (${metodeBayar})` : `❌ BELUM LUNAS`;
+            const pesanWA = `*NOTA LAUNDRY*\n\nHalo Kak *${nama}*,\nBerikut rincian cucian kakak:\n\n${itemsString}\n\n💰 *Total: Rp ${totalPrice.toLocaleString('id-ID')}*\n💳 Status Bayar: ${statusBayarText}\n⚖️ Total Berat: ${formatDecimal(totalWeight)} kg\n🔄 Status: *Dikerjakan*\n\nTerima kasih!`;
             
             try {
                 await fetch(APP_SCRIPT_URL, { 
                     method: 'POST', mode: 'no-cors', 
                     headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ nama, hp: hpFull, berat: totalWeight, harga: totalPrice, status: "Dikerjakan" }) 
+                    body: JSON.stringify({ 
+                        nama, hp: hpFull, berat: totalWeight, harga: totalPrice, status: "Dikerjakan",
+                        status_bayar: statusBayar, metode_bayar: metodeBayar 
+                    }) 
                 });
                 
-                statusDiv.innerText = "✅ Tersimpan!"; 
-                statusDiv.classList.remove('hidden'); 
-                statusDiv.className = "block bg-green-100 text-green-700 p-2 rounded text-center text-sm mb-2";
-                
+                statusDiv.innerText = "✅ Tersimpan!"; statusDiv.classList.remove('hidden'); statusDiv.className = "block bg-green-100 text-green-700 p-2 rounded text-center text-sm mb-2";
                 setTimeout(() => { 
                     window.open(`https://wa.me/${hpFull}?text=${encodeURIComponent(pesanWA)}`, '_blank'); 
-                    cart = []; renderCart(); 
-                    document.getElementById('nama').value = ""; 
-                    document.getElementById('hp').value = ""; 
-                    btn.disabled = false; 
-                    btn.innerHTML = `<span>🚀 Proses & Kirim Nota</span>`; 
-                    fetchCustomers(); 
+                    cart = []; renderCart(); document.getElementById('nama').value = ""; document.getElementById('hp').value = ""; btn.disabled = false; btn.innerHTML = `<span>🚀 Proses & Kirim Nota</span>`; fetchCustomers(); 
+                    document.getElementById('chkBayarAwal').checked = false; toggleMetodeBayar();
                     setTimeout(() => statusDiv.classList.add('hidden'), 3000); 
                 }, 1000);
-            } catch (error) { 
-                console.error(error); btn.disabled = false; alert("Gagal menyimpan."); 
-            }
+            } catch (error) { console.error(error); btn.disabled = false; alert("Gagal menyimpan."); }
         }
 
         // --- HISTORY & UPDATE STATUS ---
         let selectedRowData = null;
         async function loadHistory() {
-            if (!APP_SCRIPT_URL) return alert("URL Database belum diisi di kode!");
-            
             const els = { modal: document.getElementById('historyModal'), tbody: document.getElementById('historyTableBody'), table: document.getElementById('dataTable'), loading: document.getElementById('historyLoading'), empty: document.getElementById('historyEmpty') };
-            
-            els.modal.classList.remove('hidden'); 
-            els.loading.classList.remove('hidden'); 
-            els.table.classList.add('hidden'); 
-            els.empty.classList.add('hidden'); 
-            els.tbody.innerHTML = '';
-            
+            els.modal.classList.remove('hidden'); els.loading.classList.remove('hidden'); els.table.classList.add('hidden'); els.empty.classList.add('hidden'); els.tbody.innerHTML = '';
             try {
-                const res = await fetch(APP_SCRIPT_URL); 
-                const data = await res.json(); 
-                els.loading.classList.add('hidden');
-                
+                const res = await fetch(APP_SCRIPT_URL); const data = await res.json(); els.loading.classList.add('hidden');
                 if (!data || data.length === 0) { els.empty.classList.remove('hidden'); return; }
-                
-                els.table.classList.remove('hidden'); 
-                document.getElementById('recordCount').innerText = `${data.length} Data`;
+                els.table.classList.remove('hidden'); document.getElementById('recordCount').innerText = `${data.length} Data`;
                 
                 data.slice().reverse().forEach(row => {
                     const tr = document.createElement('tr');
@@ -411,61 +385,105 @@
                     if (statusText.includes("Selesai")) badgeColor = "bg-green-100 text-green-800"; 
                     if (statusText.includes("Diambil")) badgeColor = "bg-gray-100 text-gray-800";
                     
+                    // Logic Warna Harga (Lunas/Belum)
+                    const isLunas = (row.status_bayar === "Lunas");
+                    const colorHarga = isLunas ? "text-green-600" : "text-red-600";
+                    const labelBayar = isLunas ? "(Lunas)" : "(Belum)";
+
                     const rowJson = JSON.stringify(row).replace(/"/g, '&quot;');
                     
-                    tr.innerHTML = `
-                        <td class="px-4 py-3 whitespace-nowrap text-gray-500">${displayDate}</td>
-                        <td class="px-4 py-3"><div class="font-bold text-gray-800 capitalize">${row.nama}</div></td>
-                        <td class="px-4 py-3 text-center"><button onclick="openUpdateOverlay(${rowJson})" class="px-2 py-1 rounded text-xs font-bold border ${badgeColor}">${statusText}</button></td>
-                        <td class="px-4 py-3 text-right text-blue-600 font-bold">Rp ${(parseInt(row.harga)||0).toLocaleString('id-ID')}</td>
-                    `;
+                    tr.innerHTML = `<td class="px-4 py-3 whitespace-nowrap text-gray-500">${displayDate}</td><td class="px-4 py-3"><div class="font-bold text-gray-800 capitalize">${row.nama}</div></td><td class="px-4 py-3 text-center"><button onclick="openUpdateOverlay(${rowJson})" class="px-2 py-1 rounded text-xs font-bold border ${badgeColor}">${statusText}</button></td><td class="px-4 py-3 text-right font-bold ${colorHarga}">Rp ${(parseInt(row.harga)||0).toLocaleString('id-ID')}<br><span class="text-[10px] font-normal">${labelBayar}</span></td>`;
                     els.tbody.appendChild(tr);
                 });
-            } catch (error) { 
-                els.loading.classList.add('hidden'); alert("Gagal load history."); closeHistory(); 
-            }
+            } catch (error) { els.loading.classList.add('hidden'); alert("Gagal load history."); closeHistory(); }
         }
 
         function closeHistory() { document.getElementById('historyModal').classList.add('hidden'); closeUpdateOverlay(); }
-        function openUpdateOverlay(rowData) { selectedRowData = rowData; document.getElementById('updateCustName').innerText = rowData.nama; document.getElementById('updateOverlay').classList.remove('hidden'); }
+        
+        function openUpdateOverlay(rowData) { 
+            selectedRowData = rowData; 
+            document.getElementById('updateCustName').innerText = rowData.nama; 
+            document.getElementById('updateOverlay').classList.remove('hidden'); 
+            
+            // Reset ke tampilan awal overlay
+            document.getElementById('viewSelectStatus').classList.remove('hidden');
+            document.getElementById('viewPaymentSettle').classList.add('hidden');
+        }
+        
         function closeUpdateOverlay() { document.getElementById('updateOverlay').classList.add('hidden'); selectedRowData = null; }
         
-        async function processUpdate(newStatus) {
+        function backToStatusSelect() {
+            document.getElementById('viewPaymentSettle').classList.add('hidden');
+            document.getElementById('viewSelectStatus').classList.remove('hidden');
+        }
+
+        // --- LOGIKA TODONG BAYAR (Pas Ambil) ---
+        function checkPaymentBeforePickup() {
             if (!selectedRowData) return;
-            if (!APP_SCRIPT_URL) return;
-            const overlay = document.getElementById('updateOverlay'); 
-            overlay.innerHTML = `<div class="flex flex-col items-center gap-2"><div class="loader loader-lg"></div><p>Menghubungkan...</p></div>`;
             
-            try {
-                await fetch(APP_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update', rowNumber: selectedRowData.rowNumber, status: newStatus }) });
-                
-                const hp = "62" + selectedRowData.hp.toString().replace(/^0/, '').replace(/^62/, '');
-                let pesanWA = `Status Laundry ${selectedRowData.nama}: ${newStatus}`;
-                if(newStatus === "Selesai") pesanWA = `Laundry Selesai!\n\nHalo ${selectedRowData.nama}, laundry sudah beres. Total: Rp ${(parseInt(selectedRowData.harga)||0).toLocaleString('id-ID')}`;
-                
-                setTimeout(() => { 
-                    window.open(`https://wa.me/${hp}?text=${encodeURIComponent(pesanWA)}`, '_blank'); 
-                    closeUpdateOverlay(); 
-                    loadHistory(); 
-                }, 1500);
-            } catch(e) { 
-                alert("Gagal update"); closeUpdateOverlay(); 
+            // Cek status bayar saat ini
+            if (selectedRowData.status_bayar !== "Lunas") {
+                // Belum Lunas -> Tampilkan Form Pelunasan
+                document.getElementById('viewSelectStatus').classList.add('hidden');
+                document.getElementById('viewPaymentSettle').classList.remove('hidden');
+                document.getElementById('settleAmount').innerText = "Rp " + (parseInt(selectedRowData.harga)||0).toLocaleString('id-ID');
+            } else {
+                // Sudah Lunas -> Langsung proses status Diambil
+                processUpdate('Diambil');
             }
         }
 
-        // --- FITUR KEAMANAN (ANTI KLIK KANAN & INSPECT) ---
-        
-        // 1. Matikan Klik Kanan
-        document.addEventListener('contextmenu', event => event.preventDefault());
+        async function processUpdate(newStatus, isSettlePayment = false) {
+            if (!selectedRowData) return;
+            
+            // FIX: Ambil nilai metode bayar SEBELUM overlay ditimpa
+            let metodeBayarValue = null;
+            if (isSettlePayment) {
+                const el = document.getElementById('settleMethod');
+                if (el) metodeBayarValue = el.value;
+            }
 
-        // 2. Matikan Shortcut Inspect Element (F12, Ctrl+Shift+I, dll)
-        document.onkeydown = function(e) {
-            if(e.keyCode == 123) { return false; } // F12
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { return false; } // Ctrl+Shift+I
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) { return false; } // Ctrl+Shift+C
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { return false; } // Ctrl+Shift+J
-            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { return false; } // Ctrl+U
+            const overlay = document.getElementById('updateOverlay'); 
+            overlay.innerHTML = `<div class="flex flex-col items-center gap-2"><div class="loader loader-lg"></div><p>Menghubungkan...</p></div>`;
+            
+            // Payload Dasar
+            let payload = { 
+                action: 'update', 
+                rowNumber: selectedRowData.rowNumber, 
+                status: newStatus 
+            };
+
+            // Jika ini proses pelunasan (via tombol merah tadi)
+            if (isSettlePayment && metodeBayarValue) {
+                payload.status_bayar = "Lunas";
+                payload.metode_bayar = metodeBayarValue;
+            }
+
+            try {
+                await fetch(APP_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                
+                const hp = "62" + selectedRowData.hp.toString().replace(/^0/, '').replace(/^62/, '');
+                const hargaFormatted = (parseInt(selectedRowData.harga)||0).toLocaleString('id-ID');
+                let pesanWA = `ℹ️ Status Laundry ${selectedRowData.nama}: ${newStatus}`;
+                
+                if (newStatus === "Selesai") pesanWA = `✅ Laundry Selesai!\n\nHalo ${selectedRowData.nama}, laundry sudah beres. Total: Rp ${hargaFormatted}\nSilakan diambil ya kak.`;
+                else if (newStatus === "Diambil") {
+                    pesanWA = `👋 Terima Kasih\n\nHalo ${selectedRowData.nama}, laundry sudah diambil.`;
+                    if(isSettlePayment) pesanWA += `\n\n💰 Pembayaran LUNAS (Rp ${hargaFormatted}). Terima kasih!`;
+                }
+
+                setTimeout(() => { 
+                    window.open(`https://wa.me/${hp}?text=${encodeURIComponent(pesanWA)}`, '_blank'); 
+                    closeUpdateOverlay(); 
+                    // Kembalikan isi overlay ke default biar ga error pas dibuka lg
+                    location.reload(); // Reload page biar fresh datanya
+                }, 1500);
+            } catch(e) { alert("Gagal update"); closeUpdateOverlay(); }
         }
+
+        // Security
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) { if(e.keyCode == 123) return false; }
     </script>
 </body>
 </html>
