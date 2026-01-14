@@ -30,12 +30,38 @@
         .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-        /* --- PRINT STYLES (KHUSUS STRUK) --- */
+        /* --- PRINT STYLES (UPDATED FOR 80MM) --- */
         @media print {
-            body { background-color: white; font-family: 'Courier New', Courier, monospace; }
+            @page { 
+                margin: 0; 
+                size: auto; 
+            }
+            body { 
+                background-color: white; 
+                font-family: 'Courier New', Courier, monospace; /* Font monospace lebih jelas di thermal */
+                margin: 0;
+                padding: 0;
+            }
+            /* Hide UI Elements */
             .app-container, .fab-container, #toast, #historyModal, #updateSheet { display: none !important; }
-            #receipt-area { display: block !important; width: 100%; max-width: 58mm; margin: 0 auto; padding: 5px; color: black; }
-            @page { margin: 0; size: auto; }
+            
+            /* Show Receipt */
+            #receipt-area { 
+                display: block !important; 
+                width: 100%;
+                /* 80mm biasanya area cetak efektif sekitar 72-78mm */
+                max-width: 78mm; 
+                margin: 0; 
+                padding: 5px 10px; 
+                color: black;
+                font-size: 14px; /* Ukuran font diperbesar */
+                font-weight: bold; /* Cetak tebal biar jelas */
+                line-height: 1.2;
+            }
+            
+            #receipt-area h2 { font-size: 18px; margin-bottom: 5px; }
+            #receipt-area p { margin-bottom: 2px; }
+            #receipt-area .small-text { font-size: 12px; font-weight: normal; }
         }
     </style>
 </head>
@@ -134,34 +160,34 @@
         </div>
     </div>
 
-    <!-- AREA STRUK (Hidden on Screen, Visible on Print) -->
-    <div id="receipt-area" class="hidden font-mono text-xs leading-tight">
+    <!-- AREA STRUK (Updated for 80mm & Bigger Text) -->
+    <div id="receipt-area" class="hidden">
         <div class="text-center mb-4">
-            <h2 class="font-bold text-sm uppercase">LAUNDRY BERKAH</h2>
-            <p class="text-[10px]">Jl. Mawar No. 12, Jakarta</p>
-            <p class="text-[10px]">WA: 0812-3456-7890</p>
-            <p class="mt-2">--------------------------------</p>
+            <h2 class="font-bold text-xl uppercase">LAUNDRY BERKAH</h2>
+            <p class="small-text">Jl. Mawar No. 12, Jakarta</p>
+            <p class="small-text">WA: 0812-3456-7890</p>
+            <p class="mt-2">================================</p>
         </div>
-        <div class="mb-2">
+        <div class="mb-2 space-y-1">
             <div class="flex justify-between"><span>Tgl:</span> <span id="r-date">-</span></div>
-            <div class="flex justify-between"><span>Plg:</span> <span id="r-name" class="font-bold uppercase">-</span></div>
+            <div class="flex justify-between"><span>Plg:</span> <span id="r-name" class="font-bold uppercase text-lg">-</span></div>
             <div class="flex justify-between"><span>HP :</span> <span id="r-hp">-</span></div>
         </div>
-        <p>--------------------------------</p>
-        <div id="r-items" class="space-y-1 mb-2 mt-2">
+        <p>================================</p>
+        <div id="r-items" class="space-y-2 mb-4 mt-2">
             <!-- Items injected here via JS -->
         </div>
-        <p>--------------------------------</p>
-        <div class="flex justify-between font-bold text-sm mt-2">
+        <p>================================</p>
+        <div class="flex justify-between font-bold text-lg mt-2">
             <span>TOTAL</span>
             <span id="r-total">Rp 0</span>
         </div>
-        <div class="text-center mt-4 border-2 border-black p-1 rounded inline-block w-full">
-            <span id="r-status" class="font-bold uppercase">BELUM LUNAS</span>
+        <div class="text-center mt-4 border-2 border-black p-2 rounded inline-block w-full">
+            <span id="r-status" class="font-bold uppercase text-lg">BELUM LUNAS</span>
         </div>
-        <div class="text-center mt-6 text-[10px]">
-            <p>Terima Kasih!</p>
-            <p>Barang tidak diambil > 1 bulan</p>
+        <div class="text-center mt-8 small-text">
+            <p>*** TERIMA KASIH ***</p>
+            <p>Barang tidak diambil > 30 hari</p>
             <p>diluar tanggung jawab kami.</p>
         </div>
     </div>
@@ -352,11 +378,11 @@
             // Karena data per item tidak tersimpan di DB, kita tampilkan Ringkasan
             const rItems = document.getElementById('r-items');
             rItems.innerHTML = `
-                <div class="flex justify-between font-bold">
+                <div class="flex justify-between font-bold" style="font-size:16px;">
                     <span>Total Berat Laundry</span>
                     <span>${row.berat} Kg</span>
                 </div>
-                <div class="text-[10px] italic text-center mt-1">*Detail item cek WA</div>
+                <div class="text-[12px] italic text-center mt-1">*Detail item cek WA</div>
             `;
             
             document.getElementById('r-total').innerText = "Rp " + parseInt(row.harga).toLocaleString('id-ID');
