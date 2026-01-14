@@ -2,643 +2,504 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Owner - Laundry</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Owner Dashboard</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js untuk Grafik -->
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Premium -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: transform 0.2s; }
-        .card:hover { transform: translateY(-2px); }
-        .stat-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; }
-        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
-        /* Scrollbar Halus */
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        /* Active Filter Button Style */
-        .filter-btn-active { background-color: #ffffff !important; color: #2563eb !important; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #F8FAFC; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Mobile Container (Match index.html style) */
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: #F8FAFC;
+            min-height: 100vh;
+            position: relative;
+            padding-bottom: 90px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        /* Glass Header */
+        .glass-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            border-bottom: 1px solid #F1F5F9;
+        }
+
+        /* Card Styles */
+        .card-white {
+            background: white;
+            border-radius: 20px;
+            padding: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            border: 1px solid #F1F5F9;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            background: white;
+            border-top: 1px solid #F1F5F9;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            z-index: 50;
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 10px;
+            font-weight: 600;
+            color: #94A3B8;
+            gap: 4px;
+            flex: 1;
+        }
+        .nav-item.active { color: #3B82F6; }
+        .nav-item i { font-size: 20px; margin-bottom: 2px; }
+
+        /* Utilities */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .skeleton { background: #E2E8F0; border-radius: 8px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
 </head>
-<body class="min-h-screen p-4 md:p-8">
+<body>
 
-    <div class="max-w-7xl mx-auto space-y-8">
+    <div class="app-container">
         
-        <!-- Header Dashboard -->
-        <div class="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+        <!-- HEADER -->
+        <div class="glass-header px-6 py-4 flex justify-between items-center">
             <div>
-                <h1 class="text-3xl font-bold text-slate-800">📊 Laporan Keuangan</h1>
-                <p class="text-slate-500 text-sm mt-1">Ringkasan performa & arus kas laundry</p>
+                <p class="text-xs font-semibold text-blue-500 uppercase tracking-wider">Owner Dashboard</p>
+                <h1 class="text-xl font-bold text-slate-800">Laporan Bisnis</h1>
             </div>
-            
-            <div class="mt-4 md:mt-0 flex items-center gap-4">
-                <!-- Dropdown Periode (Visual Only - Grafik Global) -->
-                <select class="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg px-4 py-2.5 focus:ring-blue-500 focus:border-blue-500 block outline-none">
-                    <option>Ringkasan Global</option>
-                </select>
-
-                <!-- Tombol Refresh -->
-                <button onclick="loadRealData()" id="btnRefresh" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition shadow-lg shadow-blue-200">
-                    <span>🔄 Refresh Data</span>
-                </button>
+            <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition cursor-pointer active:scale-95" onclick="loadRealData()">
+                <i class="fa-solid fa-arrows-rotate"></i>
             </div>
         </div>
 
-        <!-- 1. KARTU STATISTIK KEUANGAN (Money Focus) -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <!-- HALAMAN 1: HOME -->
+        <div id="pageHome" class="px-6 py-6 space-y-6">
             
-            <!-- Cash (Uang Fisik) -->
-            <div class="card border-b-4 border-green-500">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Uang Tunai (Laci)</p>
-                        <h3 class="text-2xl font-bold text-slate-800 mt-2" id="statCash">Rp 0</h3>
-                        <p class="text-xs text-green-600 mt-1 flex items-center gap-1 font-medium">
-                            <span class="bg-green-100 px-1.5 rounded">Cash</span> Lunas
-                        </p>
+            <!-- Filter Tanggal -->
+            <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                <button onclick="setFilter('today')" id="btnToday" class="px-4 py-2 bg-blue-600 text-white rounded-full text-xs font-bold shadow-lg shadow-blue-200 whitespace-nowrap transition">Hari Ini</button>
+                <button onclick="setFilter('week')" id="btnWeek" class="px-4 py-2 bg-white text-slate-500 border border-slate-200 rounded-full text-xs font-bold whitespace-nowrap transition">7 Hari</button>
+                <button onclick="setFilter('month')" id="btnMonth" class="px-4 py-2 bg-white text-slate-500 border border-slate-200 rounded-full text-xs font-bold whitespace-nowrap transition">Bulan Ini</button>
+            </div>
+
+            <!-- Hero Card: Total Omzet -->
+            <div class="bg-gradient-to-br from-blue-600 to-blue-500 rounded-3xl p-6 text-white shadow-xl shadow-blue-200 relative overflow-hidden">
+                <!-- Background Pattern -->
+                <div class="absolute right-[-20px] top-[-20px] opacity-10 text-9xl"><i class="fa-solid fa-chart-line"></i></div>
+                
+                <p class="text-blue-100 text-xs font-medium mb-1">Total Pemasukan (Lunas)</p>
+                <h2 class="text-3xl font-extrabold mb-4 tracking-tight" id="statOmzetTotal">Rp 0</h2>
+                
+                <div class="flex gap-3">
+                    <div class="flex-1 bg-white/20 rounded-xl p-3 backdrop-blur-sm border border-white/10">
+                        <div class="flex items-center gap-1.5 mb-1 opacity-80">
+                            <i class="fa-solid fa-weight-hanging text-[10px]"></i> <span class="text-[10px]">Total Berat</span>
+                        </div>
+                        <p class="font-bold text-sm" id="statBerat">0 Kg</p>
                     </div>
-                    <div class="stat-icon bg-green-50 text-green-600">💵</div>
-                </div>
-            </div>
-            
-            <!-- QRIS/Transfer (Uang Digital) -->
-            <div class="card border-b-4 border-blue-500">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Uang Rekening</p>
-                        <h3 class="text-2xl font-bold text-slate-800 mt-2" id="statRekening">Rp 0</h3>
-                        <p class="text-xs text-blue-600 mt-1 flex items-center gap-1 font-medium">
-                            <span class="bg-blue-100 px-1.5 rounded">QRIS</span> Lunas
-                        </p>
+                    <div class="flex-1 bg-white/20 rounded-xl p-3 backdrop-blur-sm border border-white/10">
+                        <div class="flex items-center gap-1.5 mb-1 opacity-80">
+                            <i class="fa-solid fa-file-invoice text-[10px]"></i> <span class="text-[10px]">Transaksi</span>
+                        </div>
+                        <p class="font-bold text-sm" id="statCount">0</p>
                     </div>
-                    <div class="stat-icon bg-blue-50 text-blue-600">🏦</div>
                 </div>
             </div>
 
-            <!-- Piutang (Uang Macet) -->
-            <div class="card border-b-4 border-red-500 bg-red-50/30">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-red-500 text-xs font-bold uppercase tracking-wider">Piutang (Belum Lunas)</p>
-                        <h3 class="text-2xl font-bold text-red-600 mt-2" id="statPiutang">Rp 0</h3>
-                        <p class="text-xs text-red-400 mt-1 font-medium">Harus ditagih!</p>
-                    </div>
-                    <div class="stat-icon bg-red-100 text-red-600">📕</div>
+            <!-- 1. Grafik Tren Harian -->
+            <div class="card-white">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-slate-800 text-sm">Tren Harian</h3>
+                    <span class="text-[10px] bg-green-50 text-green-600 px-2 py-1 rounded-md font-bold">+Grafik</span>
+                </div>
+                <div class="h-48 w-full">
+                    <canvas id="dailyChart"></canvas>
                 </div>
             </div>
 
-            <!-- Beban Kerja (Kg) -->
-            <div class="card border-b-4 border-orange-500">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Load Mesin</p>
-                        <h3 class="text-2xl font-bold text-slate-800 mt-2" id="statBerat">0 Kg</h3>
-                        <p class="text-xs text-slate-400 mt-1">Akumulasi hari ini</p>
-                    </div>
-                    <div class="stat-icon bg-orange-50 text-orange-600">⚖️</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 2. CHARTS & TABEL PIUTANG -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            <!-- Grafik Tren Omzet Mingguan -->
-            <div class="card lg:col-span-2">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="font-bold text-slate-700 text-lg">📈 Tren Pemasukan 7 Hari</h3>
-                </div>
-                <div class="h-72">
-                    <canvas id="revenueChart"></canvas>
-                </div>
-            </div>
-            
-            <!-- Tabel Piutang (Daftar Orang Belum Bayar) -->
-            <div class="card border border-red-100">
-                <h3 class="font-bold text-red-600 mb-4 flex items-center gap-2">
-                    ⚠️ Belum Lunas
-                    <span class="text-xs font-normal bg-red-100 text-red-600 px-2 py-1 rounded-full" id="countPiutang">0</span>
-                </h3>
-                <div class="overflow-y-auto h-72 custom-scroll pr-2">
-                    <table class="w-full text-sm text-left">
-                        <tbody id="unpaidTableBody" class="divide-y divide-red-50">
-                            <!-- Data akan diisi JS -->
-                            <tr><td class="text-center text-slate-400 py-4">Semua lunas! 🎉</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. DETAIL METODE BAYAR & TOP PELANGGAN -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            
-            <!-- Pie Chart -->
-            <div class="card">
-                <h3 class="font-bold text-slate-700 mb-6 text-center">Metode Pembayaran</h3>
-                <div class="flex justify-center h-64">
-                    <canvas id="paymentMethodChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Top Pelanggan (Leaderboard) -->
-            <div class="card">
-                <h3 class="font-bold text-slate-700 mb-4 flex items-center gap-2">
-                    👑 Top 5 Pelanggan Sultan
-                </h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase rounded-lg">
-                            <tr>
-                                <th class="px-4 py-3 rounded-l-lg">Nama</th>
-                                <th class="px-4 py-3 text-center">Order</th>
-                                <th class="px-4 py-3 text-right rounded-r-lg">Total Belanja</th>
-                            </tr>
-                        </thead>
-                        <tbody id="topCustomerBody" class="divide-y divide-slate-100">
-                            <tr><td colspan="3" class="text-center py-4 text-slate-400">Loading data...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- 4. TABEL DAFTAR TRANSAKSI (FILTERABLE) -->
-        <div class="card bg-white border border-slate-200">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                <div>
-                    <h3 class="font-bold text-slate-700 text-lg flex items-center gap-2">
-                        📝 Daftar Transaksi
+            <!-- 2. Belum Lunas (Piutang) -->
+            <div>
+                <div class="flex justify-between items-center mb-3 px-1">
+                    <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-circle-exclamation text-red-500"></i> Belum Lunas
                     </h3>
-                    <p class="text-xs text-slate-400 mt-1">Lihat detail order berdasarkan tanggal</p>
+                    <span class="text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded-lg" id="piutangCount">0</span>
                 </div>
                 
-                <div class="flex flex-col sm:flex-row flex-wrap items-center gap-3">
-                    <!-- Preset Filter Buttons -->
-                    <div class="flex bg-slate-100 rounded-lg p-1">
-                        <button onclick="setFilter('today')" class="filter-btn px-3 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-700 transition filter-btn-active" id="btnFilterToday">Hari Ini</button>
-                        <button onclick="setFilter('yesterday')" class="filter-btn px-3 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-700 transition" id="btnFilterYesterday">Kemarin</button>
-                        <button onclick="setFilter('month')" class="filter-btn px-3 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-700 transition" id="btnFilterMonth">Bulan Ini</button>
-                        <button onclick="setFilter('all')" class="filter-btn px-3 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-700 transition" id="btnFilterAll">Semua</button>
-                    </div>
+                <!-- Total Nominal Piutang -->
+                <div class="bg-red-50 border border-red-100 rounded-2xl p-4 mb-3 flex justify-between items-center">
+                    <span class="text-xs text-red-400 font-medium">Total Tagihan</span>
+                    <span class="text-lg font-bold text-red-600" id="statPiutang">Rp 0</span>
+                </div>
 
-                    <!-- Custom Date Range -->
-                    <div class="flex items-center gap-2 border-l border-slate-200 pl-2 sm:pl-3">
-                        <input type="date" id="filterStartDate" class="border border-slate-300 rounded px-2 py-1.5 text-xs text-slate-600 focus:outline-blue-500">
-                        <span class="text-slate-400 text-xs">-</span>
-                        <input type="date" id="filterEndDate" class="border border-slate-300 rounded px-2 py-1.5 text-xs text-slate-600 focus:outline-blue-500">
-                        <button onclick="setFilter('custom')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-xs rounded font-bold transition shadow-sm">Cari</button>
+                <!-- List Item Piutang -->
+                <div class="space-y-3 max-h-60 overflow-y-auto custom-scroll" id="unpaidList">
+                    <!-- Item akan dirender di sini -->
+                    <div class="text-center text-slate-400 text-xs py-4">Aman, semua sudah lunas! 🎉</div>
+                </div>
+            </div>
+
+            <!-- 3. Metode Pembayaran -->
+            <div class="card-white">
+                <h3 class="font-bold text-slate-800 text-sm mb-4">Metode Pembayaran</h3>
+                <div class="flex items-center gap-6">
+                    <!-- Chart Donat -->
+                    <div class="w-24 h-24 relative">
+                        <canvas id="paymentChart"></canvas>
+                    </div>
+                    <!-- Legend -->
+                    <div class="flex-1 space-y-3">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="flex items-center gap-2 text-slate-500"><span class="w-2 h-2 rounded-full bg-green-500"></span> Tunai</span>
+                            <span class="font-bold text-slate-800" id="valTunai">Rp 0</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="flex items-center gap-2 text-slate-500"><span class="w-2 h-2 rounded-full bg-blue-500"></span> QRIS</span>
+                            <span class="font-bold text-slate-800" id="valQRIS">Rp 0</span>
+                        </div>
+                        <div class="border-t border-slate-100 my-1"></div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="flex items-center gap-2 text-slate-500"><span class="w-2 h-2 rounded-full bg-red-500"></span> Belum Bayar</span>
+                            <span class="font-bold text-red-500" id="valUtang">Rp 0</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="overflow-x-auto rounded-lg border border-slate-100">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
-                        <tr>
-                            <th class="px-4 py-3 border-b">Waktu</th>
-                            <th class="px-4 py-3 border-b">Pelanggan</th>
-                            <th class="px-4 py-3 border-b text-center">Status</th>
-                            <th class="px-4 py-3 border-b text-center">Pembayaran</th>
-                            <th class="px-4 py-3 border-b text-right">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="transactionTableBody" class="divide-y divide-slate-100">
-                        <tr><td colspan="5" class="text-center py-8 text-slate-400">Silakan pilih filter tanggal...</td></tr>
-                    </tbody>
-                </table>
+            <!-- 4. Pelanggan Sultan -->
+            <div>
+                <h3 class="font-bold text-slate-800 text-sm mb-3 px-1 flex items-center gap-2">
+                    <i class="fa-solid fa-crown text-yellow-500"></i> Pelanggan Sultan
+                </h3>
+                <div class="space-y-3" id="topCustomerList">
+                    <!-- Loading Skeleton -->
+                    <div class="card-white h-16 animate-pulse bg-slate-100 border-none"></div>
+                </div>
             </div>
-            
-            <div class="mt-4 flex justify-between items-center text-xs text-slate-400">
-                <span id="transactionCount">Menampilkan 0 data</span>
-                <span class="italic text-[10px]">Data terurut dari yang terbaru</span>
+
+        </div>
+
+        <!-- HALAMAN 2: RIWAYAT TRANSAKSI -->
+        <div id="pageHistory" class="px-6 py-6 space-y-4 hidden">
+            <!-- Search -->
+            <div class="bg-white p-2 rounded-xl border border-slate-200 flex gap-2 sticky top-20 z-30 shadow-sm">
+                <input type="text" id="searchTrx" placeholder="Cari nama pelanggan..." class="flex-1 bg-transparent text-sm px-3 py-2 outline-none text-slate-700">
+                <button class="bg-slate-100 w-10 rounded-lg text-slate-500"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+
+            <div id="transactionList" class="space-y-3 pb-20">
+                <!-- Data List -->
             </div>
         </div>
-        
+
+        <!-- BOTTOM NAV (Cuma 2 Menu) -->
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="switchPage('home', this)">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Beranda</span>
+            </div>
+            <div class="nav-item" onclick="switchPage('history', this)">
+                <i class="fa-solid fa-list-ul"></i>
+                <span>Riwayat</span>
+            </div>
+        </div>
+
     </div>
 
-    <!-- SCRIPT UTAMA -->
+    <!-- SCRIPT LOGIC -->
     <script>
-        // --- ⚙️ KONFIGURASI ⚙️ ---
-        // Masukkan URL Google Apps Script yang SAMA dengan index.html di sini:
+        // --- ⚙️ CONFIG ⚙️ ---
         const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwmcwmimlusSPzkKJrzKjEY1QFC-jExoqhHfbVvpWmXuuG1vto2TSQqzYpZNt1HBF6dnw/exec"; 
 
-        // --- INISIALISASI ---
-        let revenueChartInstance = null;
+        // --- GLOBAL VARS ---
+        let globalData = [];
+        let dailyChartInstance = null;
         let paymentChartInstance = null;
-        let globalData = []; // Menyimpan semua data mentah dari sheet
 
         window.onload = () => {
-            // Set default date input ke hari ini
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('filterStartDate').value = today;
-            document.getElementById('filterEndDate').value = today;
-
-            if (!APP_SCRIPT_URL) {
-                alert("URL Belum Diset! Silakan edit file dashboard.html dan isi APP_SCRIPT_URL di bagian bawah.");
-            } else {
-                loadRealData();
-            }
+            if(!APP_SCRIPT_URL) return alert("URL Script belum diset di dashboard.html!");
+            loadRealData();
         };
 
-        // --- FETCH DATA DARI GOOGLE SHEET ---
+        // --- NAVIGATION ---
+        function switchPage(page, el) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('pageHome').classList.add('hidden');
+            document.getElementById('pageHistory').classList.add('hidden');
+            if(page === 'home') document.getElementById('pageHome').classList.remove('hidden');
+            if(page === 'history') document.getElementById('pageHistory').classList.remove('hidden');
+        }
+
+        // --- DATA LOADING ---
         async function loadRealData() {
-            const btn = document.getElementById('btnRefresh');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = `<div class="loader"></div> Loading...`;
-            btn.disabled = true;
-            
             try {
                 const res = await fetch(APP_SCRIPT_URL);
                 const data = await res.json();
-                
-                // Simpan ke variabel global untuk filtering lokal
                 globalData = data;
-
-                processDashboardData(data);
                 
-                // Default tampilkan transaksi hari ini
-                setFilter('today');
-
+                processHomeData('today'); 
+                renderTransactionList(data);
+                
             } catch(e) {
                 console.error(e);
-                alert("Gagal mengambil data. Pastikan URL benar & internet lancar.");
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+                alert("Gagal memuat data.");
             }
         }
 
-        // --- LOGIKA FILTER TRANSAKSI ---
+        // --- FILTER & PROCESSING (HOME) ---
         function setFilter(type) {
-            // Reset button styles
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('filter-btn-active');
-                btn.classList.add('text-slate-500', 'bg-transparent'); 
+            ['btnToday', 'btnWeek', 'btnMonth'].forEach(id => {
+                document.getElementById(id).className = "px-4 py-2 bg-white text-slate-500 border border-slate-200 rounded-full text-xs font-bold whitespace-nowrap transition";
             });
+            document.getElementById(type === 'today' ? 'btnToday' : type === 'week' ? 'btnWeek' : 'btnMonth').className = "px-4 py-2 bg-blue-600 text-white rounded-full text-xs font-bold shadow-lg shadow-blue-200 whitespace-nowrap transition";
+            processHomeData(type);
+        }
 
-            let startDate = new Date();
-            let endDate = new Date();
+        function processHomeData(filterType) {
             let filteredData = [];
+            const start = new Date(); start.setHours(0,0,0,0);
 
-            // Helper: Reset jam ke 00:00:00
-            const resetTime = (d) => { d.setHours(0,0,0,0); return d; };
+            if(filterType === 'week') start.setDate(start.getDate() - 7);
+            else if (filterType === 'month') start.setDate(1);
 
-            if (type === 'today') {
-                document.getElementById('btnFilterToday').classList.add('filter-btn-active');
-                document.getElementById('btnFilterToday').classList.remove('text-slate-500', 'bg-transparent');
-                
-                resetTime(startDate);
-                resetTime(endDate); // End date juga hari ini (tapi sampai malam nanti diceknya)
-                
-                // Filter Logic
-                filteredData = globalData.filter(row => {
-                    const rowDate = new Date(row.tanggal);
-                    return rowDate.toDateString() === startDate.toDateString();
-                });
+            filteredData = globalData.filter(d => new Date(d.tanggal) >= start);
 
-            } else if (type === 'yesterday') {
-                document.getElementById('btnFilterYesterday').classList.add('filter-btn-active');
-                document.getElementById('btnFilterYesterday').classList.remove('text-slate-500', 'bg-transparent');
-
-                startDate.setDate(startDate.getDate() - 1);
-                resetTime(startDate);
-                
-                filteredData = globalData.filter(row => {
-                    const rowDate = new Date(row.tanggal);
-                    return rowDate.toDateString() === startDate.toDateString();
-                });
-
-            } else if (type === 'month') {
-                document.getElementById('btnFilterMonth').classList.add('filter-btn-active');
-                document.getElementById('btnFilterMonth').classList.remove('text-slate-500', 'bg-transparent');
-
-                const currentMonth = startDate.getMonth();
-                const currentYear = startDate.getFullYear();
-
-                filteredData = globalData.filter(row => {
-                    const rowDate = new Date(row.tanggal);
-                    return rowDate.getMonth() === currentMonth && rowDate.getFullYear() === currentYear;
-                });
-
-            } else if (type === 'all') {
-                document.getElementById('btnFilterAll').classList.add('filter-btn-active');
-                document.getElementById('btnFilterAll').classList.remove('text-slate-500', 'bg-transparent');
-                filteredData = [...globalData];
-
-            } else if (type === 'custom') {
-                // Ambil dari input date
-                const startVal = document.getElementById('filterStartDate').value;
-                const endVal = document.getElementById('filterEndDate').value;
-
-                if (!startVal || !endVal) return alert("Pilih tanggal mulai dan selesai!");
-
-                const sDate = new Date(startVal);
-                sDate.setHours(0,0,0,0);
-                
-                const eDate = new Date(endVal);
-                eDate.setHours(23,59,59,999); // Sampai akhir hari
-
-                filteredData = globalData.filter(row => {
-                    const rowDate = new Date(row.tanggal);
-                    return rowDate >= sDate && rowDate <= eDate;
-                });
-            }
-
-            renderTransactionTable(filteredData);
-        }
-
-        function renderTransactionTable(data) {
-            const tbody = document.getElementById('transactionTableBody');
-            tbody.innerHTML = "";
-
-            if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400 text-sm">Tidak ada data pada periode ini.</td></tr>`;
-                document.getElementById('transactionCount').innerText = "Menampilkan 0 data";
-                return;
-            }
-
-            // Urutkan dari terbaru
-            data.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
-
-            document.getElementById('transactionCount').innerText = `Menampilkan ${data.length} data`;
-
-            data.forEach(row => {
-                let dateDisplay = "";
-                let timeDisplay = "";
-                try {
-                    const d = new Date(row.tanggal);
-                    dateDisplay = d.toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: '2-digit'});
-                    timeDisplay = d.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'});
-                } catch(e) {}
-
-                const status = (row.status || "Dikerjakan");
-                let statusBadge = "bg-yellow-100 text-yellow-700";
-                if(status.toLowerCase().includes("selesai")) statusBadge = "bg-green-100 text-green-700";
-                if(status.toLowerCase().includes("diambil")) statusBadge = "bg-slate-100 text-slate-600";
-
-                const bayar = (row.status_bayar || "Belum Lunas");
-                let bayarColor = "text-red-500 font-bold";
-                let metode = "";
-                if(bayar === "Lunas") {
-                    bayarColor = "text-green-600 font-bold";
-                    metode = `<span class="text-[10px] text-slate-400 font-normal block">${row.metode_bayar || 'Cash'}</span>`;
-                }
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition border-b border-slate-50 last:border-0">
-                        <td class="px-4 py-3 text-slate-600">
-                            <span class="font-bold block text-slate-700">${dateDisplay}</span>
-                            <span class="text-xs text-slate-400">${timeDisplay}</span>
-                        </td>
-                        <td class="px-4 py-3 font-medium text-slate-800 capitalize">
-                            ${row.nama}
-                            <span class="block text-xs text-slate-400 font-normal">0${row.hp}</span>
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            <span class="${statusBadge} px-2 py-1 rounded-full text-xs font-bold">${status}</span>
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            <span class="${bayarColor}">${bayar}</span>
-                            ${metode}
-                        </td>
-                        <td class="px-4 py-3 text-right font-bold text-blue-600">
-                            Rp ${(parseInt(row.harga)||0).toLocaleString('id-ID')}
-                            <span class="block text-xs text-slate-400 font-normal font-mono">${row.berat}kg</span>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        // --- LOGIKA DASHBOARD UTAMA (GLOBAL STATS) ---
-        function processDashboardData(data) {
-            // Variable Penampung
-            let cashTotal = 0;
-            let rekeningTotal = 0;
-            let piutangTotal = 0;
-            let beratTotal = 0;
-            
-            // Map 7 Hari Terakhir
-            const last7Days = {};
-            for(let i=6; i>=0; i--) {
-                const d = new Date();
-                d.setDate(d.getDate() - i);
-                last7Days[d.toDateString()] = 0;
-            }
-
-            // Map Pelanggan & Metode Bayar
-            const customerMap = {};
-            const methodMap = { "Tunai": 0, "QRIS/Transfer": 0, "Belum Lunas": 0 };
+            // Stats Variables
+            let totalOmzet=0, cash=0, bank=0, piutang=0, berat=0;
+            const dailyData = {}; 
             const unpaidList = [];
+            const customerMap = {};
 
-            // Loop semua data transaksi
-            data.forEach(row => {
-                let date;
-                try { date = new Date(row.tanggal); } catch(e) { return; }
-                if(isNaN(date.getTime())) return;
+            // Initialize last 7 days keys for chart
+            for(let i=6; i>=0; i--) { 
+                const d=new Date(); d.setDate(d.getDate()-i); 
+                dailyData[d.toLocaleDateString('id-ID', {day:'numeric', month:'short'})] = 0; 
+            }
 
-                const dateStr = date.toDateString();
-                const harga = parseInt(row.harga) || 0;
-                const berat = parseFloat(row.berat) || 0;
-                
-                // Bersihkan Data string
-                const statusBayar = (row.status_bayar || "Belum Lunas").trim();
-                const metodeBayar = (row.metode_bayar || "-").trim();
+            filteredData.forEach(row => {
+                const harga = parseInt(row.harga)||0;
+                const weight = parseFloat(row.berat)||0;
+                const statusBayar = (row.status_bayar||"").trim();
+                const metode = (row.metode_bayar||"").toLowerCase();
+                const dateKey = new Date(row.tanggal).toLocaleDateString('id-ID', {day:'numeric', month:'short'});
 
-                // 1. Hitung Berat (Filter Hari Ini)
-                if (dateStr === new Date().toDateString()) {
-                    beratTotal += berat;
-                }
+                // 1. Berat Total
+                berat += weight;
 
-                // 2. Hitung Uang (Cashflow)
-                if (statusBayar === "Lunas") {
-                    // Masuk Omzet Real
-                    if (metodeBayar.toLowerCase().includes("tunai") || metodeBayar.toLowerCase().includes("cash")) {
-                        cashTotal += harga;
-                        methodMap["Tunai"] += harga;
-                    } else {
-                        rekeningTotal += harga;
-                        methodMap["QRIS/Transfer"] += harga;
-                    }
-                    
-                    // Grafik Tren (Hanya uang Lunas yang masuk grafik real)
-                    if (last7Days.hasOwnProperty(dateStr)) {
-                        last7Days[dateStr] += harga;
-                    }
+                // 2. Keuangan
+                if(statusBayar === 'Lunas') {
+                    totalOmzet += harga;
+                    if(metode.includes('tunai') || metode.includes('cash')) cash += harga;
+                    else bank += harga;
 
+                    // Chart Data
+                    if(dailyData[dateKey] !== undefined) dailyData[dateKey] += harga;
+                    else if(filterType !== 'today') dailyData[dateKey] = (dailyData[dateKey]||0) + harga;
                 } else {
-                    // Masuk Piutang
-                    piutangTotal += harga;
-                    methodMap["Belum Lunas"] += harga;
-                    
-                    // Masukkan ke list hutang
-                    unpaidList.push({
-                        nama: row.nama,
-                        harga: harga,
-                        tanggal: date
-                    });
+                    piutang += harga;
+                    unpaidList.push(row);
                 }
 
-                // 3. Top Customer (Semua status dihitung, pelanggan setia tetap setia walau ngutang dulu)
-                const custName = row.nama ? row.nama.trim() : "Tanpa Nama";
-                if (!customerMap[custName]) customerMap[custName] = { count: 0, total: 0 };
-                customerMap[custName].count++;
-                customerMap[custName].total += harga;
+                // 3. Top Customer
+                const name = (row.nama||"No Name").trim();
+                if(!customerMap[name]) customerMap[name] = { count:0, total:0, totalKg:0 };
+                customerMap[name].count++; 
+                customerMap[name].total += harga;
+                customerMap[name].totalKg += weight;
             });
 
-            // UPDATE UI KARTU UTAMA
-            document.getElementById('statCash').innerText = "Rp " + cashTotal.toLocaleString('id-ID');
-            document.getElementById('statRekening').innerText = "Rp " + rekeningTotal.toLocaleString('id-ID');
-            document.getElementById('statPiutang').innerText = "Rp " + piutangTotal.toLocaleString('id-ID');
-            document.getElementById('statBerat').innerText = beratTotal.toLocaleString('id-ID', {maximumFractionDigits: 2}) + " Kg";
+            // UPDATE UI STATS
+            document.getElementById('statOmzetTotal').innerText = "Rp " + totalOmzet.toLocaleString('id-ID');
+            document.getElementById('statBerat').innerText = berat.toLocaleString('id-ID', {maximumFractionDigits:1}) + " Kg";
+            document.getElementById('statCount').innerText = filteredData.length;
+            
+            document.getElementById('statPiutang').innerText = "Rp " + piutang.toLocaleString('id-ID');
+            document.getElementById('piutangCount').innerText = unpaidList.length;
+            
+            // Stats Payment Method
+            document.getElementById('valTunai').innerText = "Rp " + cash.toLocaleString('id-ID');
+            document.getElementById('valQRIS').innerText = "Rp " + bank.toLocaleString('id-ID');
+            document.getElementById('valUtang').innerText = "Rp " + piutang.toLocaleString('id-ID');
 
-            // RENDER GRAFIK & TABEL
-            updateRevenueChart(last7Days);
-            updatePaymentChart(methodMap);
-            updateUnpaidTable(unpaidList);
-            updateTopCustomers(customerMap);
+            // RENDER COMPONENTS
+            renderDailyChart(dailyData);
+            renderUnpaidList(unpaidList);
+            renderPaymentChart(cash, bank, piutang);
+            renderTopCustomer(customerMap);
         }
 
-        // --- CHART: LINE CHART OMZET ---
-        function updateRevenueChart(dataMap) {
-            const labels = Object.keys(dataMap).map(d => {
-                return new Date(d).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' });
-            });
-            const values = Object.values(dataMap);
+        // --- 1. CHART TREN HARIAN ---
+        function renderDailyChart(dataMap) {
+            const ctx = document.getElementById('dailyChart').getContext('2d');
+            if(dailyChartInstance) dailyChartInstance.destroy();
 
-            const ctx = document.getElementById('revenueChart').getContext('2d');
-            if(revenueChartInstance) revenueChartInstance.destroy();
+            const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
+            gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
 
-            revenueChartInstance = new Chart(ctx, {
+            dailyChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels: Object.keys(dataMap),
                     datasets: [{
-                        label: 'Omzet Real (Lunas)',
-                        data: values,
-                        borderColor: '#3b82f6', // Biru
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        fill: true,
-                        tension: 0.3,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
+                        label: 'Omzet', data: Object.values(dataMap),
+                        borderColor: '#3B82F6', backgroundColor: gradient,
+                        fill: true, tension: 0.3, pointRadius: 3
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: {display: false} },
                     scales: { 
-                        y: { 
-                            beginAtZero: true, 
-                            grid: { borderDash: [2, 4] },
-                            ticks: { callback: function(value) { return value/1000 + 'k'; } } 
-                        },
-                        x: { grid: { display: false } }
+                        x: { grid: {display: false}, ticks: {font:{size:9}} },
+                        y: { display: false } 
                     }
                 }
             });
         }
 
-        // --- CHART: PIE METODE BAYAR ---
-        function updatePaymentChart(map) {
-            const ctx = document.getElementById('paymentMethodChart').getContext('2d');
+        // --- 2. LIST BELUM LUNAS ---
+        function renderUnpaidList(list) {
+            const el = document.getElementById('unpaidList');
+            el.innerHTML = "";
+            if(list.length === 0) return el.innerHTML = `<div class="text-center text-slate-400 text-xs py-4">Tidak ada piutang. Aman! 🎉</div>`;
+
+            list.sort((a,b) => new Date(a.tanggal) - new Date(b.tanggal)); // Oldest first
+
+            list.forEach(item => {
+                const date = new Date(item.tanggal).toLocaleDateString('id-ID', {day:'numeric', month:'short'});
+                el.innerHTML += `
+                    <div class="bg-white p-3 rounded-2xl border border-red-100 shadow-sm flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center text-xs"><i class="fa-solid fa-clock"></i></div>
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm capitalize">${item.nama}</h4>
+                                <p class="text-[10px] text-red-400">${date} • ${item.berat}kg</p>
+                            </div>
+                        </div>
+                        <span class="font-bold text-red-600 text-sm">Rp ${(parseInt(item.harga)||0).toLocaleString('id-ID')}</span>
+                    </div>`;
+            });
+        }
+
+        // --- 3. CHART METODE PEMBAYARAN ---
+        function renderPaymentChart(cash, qris, utang) {
+            const ctx = document.getElementById('paymentChart').getContext('2d');
             if(paymentChartInstance) paymentChartInstance.destroy();
 
             paymentChartInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Tunai', 'QRIS/TF', 'Belum Lunas'],
+                    labels: ['Tunai', 'QRIS', 'Utang'],
                     datasets: [{
-                        data: [map["Tunai"], map["QRIS/Transfer"], map["Belum Lunas"]],
-                        backgroundColor: ['#22c55e', '#3b82f6', '#ef4444'], 
-                        borderWidth: 0,
-                        hoverOffset: 4
+                        data: [cash, qris, utang],
+                        backgroundColor: ['#22c55e', '#3b82f6', '#ef4444'],
+                        borderWidth: 0, hoverOffset: 5
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } 
-                    }
-                }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {display: false} }, cutout: '70%' }
             });
         }
 
-        // --- TABEL: BELUM LUNAS ---
-        function updateUnpaidTable(list) {
-            const tbody = document.getElementById('unpaidTableBody');
-            document.getElementById('countPiutang').innerText = list.length;
-            tbody.innerHTML = "";
+        // --- 4. TOP SULTAN (FULL DATA) ---
+        function renderTopCustomer(map) {
+            const el = document.getElementById('topCustomerList');
+            el.innerHTML = "";
+            
+            const sorted = Object.entries(map).sort((a,b) => b[1].total - a[1].total).slice(0, 5);
+            
+            if(sorted.length === 0) return el.innerHTML = `<p class="text-xs text-slate-400 text-center">Belum ada data.</p>`;
 
-            if(list.length === 0) {
-                tbody.innerHTML = `<tr><td class="text-center text-slate-400 py-8 text-sm">Semua lunas! 🎉</td></tr>`;
-                return;
-            }
-
-            // Urutkan dari yang terlama (biar cepat ditagih)
-            list.sort((a, b) => a.tanggal - b.tanggal);
-
-            list.forEach(item => {
-                const tgl = item.tanggal.toLocaleDateString('id-ID', {day:'numeric', month:'short'});
-                tbody.innerHTML += `
-                    <tr class="group hover:bg-red-50 transition border-b border-slate-50 last:border-0">
-                        <td class="px-2 py-3">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <p class="text-sm font-bold text-slate-700 capitalize">${item.nama}</p>
-                                    <p class="text-xs text-red-400">Order tgl ${tgl}</p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-sm font-bold text-red-600">Rp ${item.harga.toLocaleString('id-ID')}</p>
-                                    <span class="text-[10px] text-slate-400">Belum Lunas</span>
-                                </div>
+            sorted.forEach(([name, d], idx) => {
+                const rankColor = idx === 0 ? "bg-yellow-100 text-yellow-600" : "bg-slate-50 text-slate-500";
+                const rankIcon = idx === 0 ? `<i class="fa-solid fa-crown"></i>` : idx+1;
+                
+                el.innerHTML += `
+                    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full ${rankColor} flex items-center justify-center font-bold text-xs shrink-0">${rankIcon}</div>
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm capitalize leading-tight">${name}</h4>
+                                <p class="text-[10px] text-slate-400 mt-0.5 font-medium">
+                                    <span class="bg-slate-50 px-1.5 py-0.5 rounded text-slate-500">${d.totalKg.toFixed(1)} Kg</span> • ${d.count}x Order
+                                </p>
                             </div>
-                        </td>
-                    </tr>
-                `;
+                        </div>
+                        <div class="text-right">
+                            <span class="block font-bold text-blue-600 text-sm">Rp ${(d.total/1000).toFixed(0)}k</span>
+                        </div>
+                    </div>`;
             });
         }
 
-        // --- TABEL: TOP PELANGGAN ---
-        function updateTopCustomers(map) {
-            const sorted = Object.entries(map)
-                .sort((a, b) => b[1].total - a[1].total) // Urutkan berdasarkan total belanja
-                .slice(0, 5); // Ambil 5 teratas
+        // --- TRANSACTION LIST VIEW ---
+        function renderTransactionList(data) {
+            const list = document.getElementById('transactionList');
+            list.innerHTML = "";
+            const sorted = [...data].sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
 
-            const tbody = document.getElementById('topCustomerBody');
-            tbody.innerHTML = "";
-
-            if(sorted.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-slate-400">Belum ada data</td></tr>`;
-                return;
-            }
-
-            sorted.forEach(([name, data], index) => {
-                let rankStyle = "text-slate-500";
-                if(index === 0) rankStyle = "text-yellow-500 text-lg"; // Juara 1 pakai font besar/warna beda
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition border-b border-slate-50 last:border-0">
-                        <td class="px-4 py-3 font-medium text-slate-700 flex items-center gap-3">
-                            <span class="font-bold ${rankStyle} w-6 text-center">${index + 1}.</span>
-                            <span class="capitalize">${name}</span>
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            <span class="bg-blue-50 text-blue-600 px-2.5 py-0.5 rounded-full text-xs font-bold">${data.count}x</span>
-                        </td>
-                        <td class="px-4 py-3 text-right font-bold text-slate-700">Rp ${data.total.toLocaleString('id-ID')}</td>
-                    </tr>
-                `;
+            sorted.forEach(row => {
+                const isLunas = row.status_bayar === "Lunas";
+                const statusColor = isLunas ? "text-green-600" : "text-red-500";
+                const status = row.status || "Dikerjakan";
+                let badge = "bg-yellow-100 text-yellow-700";
+                if(status.includes("Selesai")) badge = "bg-green-100 text-green-700";
+                if(status.includes("Diambil")) badge = "bg-slate-100 text-slate-600";
+                
+                list.innerHTML += `
+                    <div class="trx-card bg-white p-4 rounded-2xl border border-slate-100 shadow-sm mb-3">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm capitalize">${row.nama}</h4>
+                                <p class="text-xs text-slate-400">${new Date(row.tanggal).toLocaleDateString('id-ID', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'})}</p>
+                            </div>
+                            <span class="${badge} px-2 py-1 rounded-lg text-[10px] font-bold uppercase">${status}</span>
+                        </div>
+                        <div class="flex justify-between items-center pt-2 border-t border-slate-50">
+                            <p class="text-xs text-slate-500 font-medium">${row.berat} Kg</p>
+                            <div class="text-right">
+                                <p class="font-bold text-blue-600 text-sm">Rp ${(parseInt(row.harga)||0).toLocaleString('id-ID')}</p>
+                                <p class="text-[10px] ${statusColor} font-bold">${isLunas?'LUNAS':'BELUM BAYAR'}</p>
+                            </div>
+                        </div>
+                    </div>`;
             });
         }
+
+        document.getElementById('searchTrx').addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            const filtered = globalData.filter(d => d.nama.toLowerCase().includes(val));
+            renderTransactionList(filtered);
+        });
     </script>
 </body>
 </html>
