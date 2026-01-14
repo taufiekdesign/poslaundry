@@ -290,18 +290,22 @@
 
         async function processUpdate(newStatus, isSettle = false) {
             if(!selectedRowData) return;
+            
+            // FIX: Ambil nilai dulu sebelum elemen dihapus oleh loading animation
+            let methodVal = "Tunai";
+            if (isSettle) {
+                const el = document.getElementById('settleMethod');
+                if (el) methodVal = el.value;
+            }
+
             const sheetContent = document.getElementById('sheetContent');
             sheetContent.innerHTML = `<div class="h-48 flex flex-col items-center justify-center text-slate-500"><div class="loader-dots mb-2"><span></span><span></span><span></span></div><p class="text-sm">Menyimpan...</p></div>`;
-            let payload = { action: 'update', rowNumber: selectedRowData.rowNumber, status: newStatus };
-            if(isSettle) { payload.status_bayar = "Lunas"; payload.metode_bayar = document.getElementById('settleMethod').value; } // Fixed: now settleMethod exists before innerHTML overwrite in openUpdateSheet, but here we read it before overwrite? No wait, logic error potential here.
             
-            // FIX LOGIC: Read value BEFORE overwriting HTML
-            let methodVal = "Tunai";
-            if(isSettle) {
-                 const el = document.getElementById('settleMethod');
-                 if(el) methodVal = el.value;
-                 payload.metode_bayar = methodVal;
-            }
+            let payload = { action: 'update', rowNumber: selectedRowData.rowNumber, status: newStatus };
+            if(isSettle) { 
+                payload.status_bayar = "Lunas"; 
+                payload.metode_bayar = methodVal; 
+            } 
 
             try {
                 await fetch(APP_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
